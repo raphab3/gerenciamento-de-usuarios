@@ -1,55 +1,63 @@
 class UserController{
-
+    
     constructor(formId, tableId){
         this.formEl = document.getElementById(formId);
         this.tableEl = document.getElementById(tableId);
-
+        
         this.onSubmit();
     }
-
+    
     onSubmit() {
-
+        
         this.formEl.addEventListener('submit', event => {
             event.preventDefault(); //Desativa funções padrão do navegador
             
             let values = this.getValues()
-
             
-
-            this.getPhoto((content) =>{
-
+            this.getPhoto().then((content)=>{
                 values.photo = content;
                 this.addLine(values);
-                console.log(values);
-
-            });
-
-            
-        });
-    }
-
-    getPhoto(callback){
-        let fileReader = new FileReader();
-
-        let elements = [...this.formEl.elements].filter(item=>{
-
-            if (item.name === 'photo') {
-                return item;
+            }), (e) => {
+                console.error(e);
             }
         });
-
-        let file = elements[0].files[0];
-
-        fileReader.onload = ()=>{
-            
-            callback(fileReader.result);
-        };
-
-        fileReader.readAsDataURL(file);
     }
-
+    
+    // funcao para pegar foto do formulario ultilizando promisse
+    getPhoto(){
+        
+        return new Promise((resolve, reject)=>{
+            
+            let fileReader = new FileReader();
+            
+            let elements = [...this.formEl.elements].filter(item=>{
+                
+                if (item.name === 'photo') {
+                    return item;
+                }
+            });
+            
+            let file = elements[0].files[0];
+            
+            fileReader.onload = ()=>{
+                
+                resolve(fileReader.result);
+            };
+            
+            fileReader.onerror = (e)=>{
+                reject(e);
+            };
+            
+            fileReader.readAsDataURL(file);
+            
+            
+        });
+        
+        
+    }
+    
     getValues() {
-
+        
         let user = {};
         
         [...this.formEl.elements].forEach((dados) => {
@@ -65,7 +73,7 @@ class UserController{
             }
             
         });
-    
+        
         return new User(
             user.name,
             user.gender,
@@ -75,14 +83,14 @@ class UserController{
             user.password,
             user.photo,
             user.admin
-        );
+            );
+            
+        }
         
-    }
-
-    addLine(dataUser){
-
-        this.tableEl.innerHTML = `
-        <tr>
+        addLine(dataUser){
+            
+            this.tableEl.innerHTML = `
+            <tr>
             <td><img src="${dataUser.photo}" alt="User Image" class="img-circle img-sm"></td>
             <td>${dataUser.name}</td>
             <td>${dataUser.email}</td>
@@ -92,11 +100,11 @@ class UserController{
             <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
             <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
             </td>
-        </tr>
+            </tr>
+            
+            `;
+            
+        }
         
-        `;
         
     }
-
-    
-}
