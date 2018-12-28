@@ -11,12 +11,16 @@ class UserController{
         
         this.formEl.addEventListener('submit', event => {
             event.preventDefault(); //Desativa funções padrão do navegador
-            
-            let values = this.getValues()
 
             let btn = this.formEl.querySelector("[type=submit]");
 
             btn.disabled = true;
+
+            let values = this.getValues();
+
+            if(!values){
+                return false;
+            }
             
             this.getPhoto().then((content)=>{
                 values.photo = content;
@@ -27,6 +31,8 @@ class UserController{
                 console.error(e);
             }
         });
+
+        this.countUserAdmin = 0;
     }
     
     // funcao para pegar foto do formulario ultilizando promisse
@@ -67,8 +73,18 @@ class UserController{
     getValues() {
         
         let user = {};
-        
+
+        let isValid = true;
+
         [...this.formEl.elements].forEach((dados) => {
+
+            if (['name', 'email', 'password'].indexOf(dados.name) > -1 && !dados.value){
+
+                dados.parentElement.classList.add('has-error');
+                isValid = false;
+
+            }
+
             if (dados.name == "gender") {
                 
                 if (dados.checked){
@@ -84,6 +100,10 @@ class UserController{
             }
             
         });
+
+        if(!isValid){
+            return false;
+        }
         
         return new User(
             user.name,
@@ -101,6 +121,8 @@ class UserController{
         addLine(dataUser){
             
             let tr = document.createElement('tr');
+
+            tr.dataset.user = JSON.stringify(dataUser);
             
             tr.innerHTML = `
                 <td><img src="${dataUser.photo}" alt="User Image" class="img-circle img-sm"></td>
@@ -116,6 +138,37 @@ class UserController{
             `;
             
             this.tableEl.appendChild(tr);
+
+            this.updateCount();
+
+        };
+
+        updateCount(){
+
+            let countUsers = 0;
+            let countUserAdmin = 0;
+
+            let values = this.getValues();
+
+           [...this.tableEl.children].forEach(tr=>{
+                countUsers++;
+
+                // if (values.admin) {
+                //     countUserAdmin++
+
+                // }
+
+                let user = JSON.parse(tr.dataset.user);
+
+                console.log(user);
+
+                if(user._admin) countUserAdmin++;
+
+           });
+
+           document.querySelector("#number-users-admin").innerHTML = countUserAdmin;
+           document.querySelector("#number-users").innerHTML = countUsers;
+           
         }
         
         
